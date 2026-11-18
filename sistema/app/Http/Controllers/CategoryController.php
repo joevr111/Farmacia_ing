@@ -70,7 +70,7 @@ class CategoryController extends Controller
 
         $category->update($validated);
 
-        return to_route('categoires.index')->with('ok' , 'Categoria actualizada correctamente');
+        return to_route('categories.index')->with('ok' , 'Categoria actualizada correctamente');
     }
 
     /**
