@@ -16,12 +16,12 @@ class DatabaseSeeder extends Seeder
         );
 
         User::firstOrCreate(
-            ['email' => 'admin@sanjuan.com'],
+            ['email' => 'joseph@sanjuan.com'],
             [
                 'role_id' => $admin->id,
                 'name' => 'Administrador',
                 'dni' => '12345678',
-                'password' => 'admin12345', // el cast 'hashed' del modelo la encripta
+                'password' => 'joseph03', // el cast 'hashed' del modelo la encripta
             ]
         );
     }
