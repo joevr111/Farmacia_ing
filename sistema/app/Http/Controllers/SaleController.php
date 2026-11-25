@@ -9,14 +9,14 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use App\Models\Activity;
 
 class SaleController extends Controller
 {
     // Listado de ventas (con cliente y vendedor cargados)
     public function index()
     {
-        $sales = Sale::with(['customer', 'user'])->latest('date')->get();
-
+        $sales = Sale::withTrashed()->with(['customer', 'user'])->latest('date')->get();
         return view('management.sales.index', compact('sales'));
     }
 
@@ -94,7 +94,7 @@ class SaleController extends Controller
 
             return $sale;
         });
-
+Activity::log('salida', 'Venta #' . str_pad($sale->id, 6, '0', STR_PAD_LEFT) . ' registrada', 'Total: S/ ' . number_format($sale->total, 2));
         return to_route('sales.show', $sale)->with('ok', 'Venta registrada');
     }
 
@@ -107,17 +107,63 @@ class SaleController extends Controller
     }
 
     // Anular venta: devuelve el stock y la elimina
-    public function destroy(Sale $sale)
-    {
+    // Anular venta: devuelve el stock y la marca como eliminada (se puede recuperar)
+public function destroy(Sale $sale)
+{
+    DB::transaction(function () use ($sale) {
+        foreach ($sale->details as $detail) {
+            Medicine::where('id', $detail->medicine_id)->increment('stock', $detail->amount);
+        }
+
+        $sale->delete(); // soft delete: los detalles se conservan
+    });
+    Activity::log('anulacion', 'Venta #' . str_pad($sale->id, 6, '0', STR_PAD_LEFT) . ' anulada', 'Stock devuelto · S/ ' . number_format($sale->total, 2));
+
+    return to_route('sales.index')->with('ok', 'Venta anulada y stock devuelto');
+}
+
+// Recuperar una venta anulada: vuelve a descontar el stock
+public function restore(Sale $sale)
+{
+    try {
         DB::transaction(function () use ($sale) {
             foreach ($sale->details as $detail) {
-                Medicine::where('id', $detail->medicine_id)->increment('stock', $detail->amount);
+                $medicine = Medicine::lockForUpdate()->find($detail->medicine_id);
+
+                if ($medicine->stock < $detail->amount) {
+                    throw new \RuntimeException(
+                        "No se puede recuperar: stock insuficiente de {$medicine->name} (disponible: {$medicine->stock})."
+                    );
+                }
+
+                $medicine->decrement('stock', $detail->amount);
             }
 
-            // Los detalles se borran solos (cascadeOnDelete en la migración)
-            $sale->delete();
+            $sale->restore();
+        });
+    } catch (\RuntimeException $e) {
+        return to_route('sales.index')->with('error', $e->getMessage());
+    }
+Activity::log('recuperacion', 'Venta #' . str_pad($sale->id, 6, '0', STR_PAD_LEFT) . ' recuperada', 'Stock descontado de nuevo · S/ ' . number_format($sale->total, 2));
+    return to_route('sales.index')->with('ok', 'Venta recuperada y stock descontado nuevamente');
+}
+    // Eliminar definitivamente una venta ya anulada (no se puede recuperar)
+    public function forceDelete(Sale $sale)
+    {
+        // Solo se puede eliminar por completo una venta que ya está anulada
+        if (! $sale->trashed()) {
+            return to_route('sales.index')->with('error', 'Primero debe anular la venta.');
+        }
+
+        DB::transaction(function () use ($sale) {
+            // El stock ya se devolvió al anular, por eso aquí NO se toca.
+            // Primero los detalles (la clave foránea es restrictOnDelete)...
+            $sale->details()->delete();
+
+            // ...y después la venta, de forma permanente
+            $sale->forceDelete();
         });
 
-        return to_route('sales.index')->with('ok', 'Venta anulada y stock devuelto');
+        return to_route('sales.index')->with('ok', 'Venta eliminada definitivamente');
     }
 }

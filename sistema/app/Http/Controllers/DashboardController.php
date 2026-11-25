@@ -40,7 +40,9 @@ class DashboardController extends Controller
 
         // Los 5 medicamentos más vendidos
         $topMedicines = DB::table('detail_sales')
-            ->join('medicines', 'medicines.id', '=', 'detail_sales.medicine_id')
+    ->join('sales', 'sales.id', '=', 'detail_sales.sale_id')
+    ->join('medicines', 'medicines.id', '=', 'detail_sales.medicine_id')
+    ->whereNull('sales.deleted_at')
             ->selectRaw('medicines.name, SUM(detail_sales.amount) as units, SUM(detail_sales.subtotal) as revenue')
             ->groupBy('medicines.id', 'medicines.name')
             ->orderByDesc('units')

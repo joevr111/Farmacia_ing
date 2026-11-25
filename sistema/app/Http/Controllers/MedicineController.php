@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Medicine;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Activity;
 
 class MedicineController extends Controller
 {
@@ -59,9 +60,11 @@ class MedicineController extends Controller
             $validated['image'] = $request->file('image')->store('medicines', 'public');
         }
 
-        Medicine::create($validated);
+        $medicine = Medicine::create($validated);
 
-        return to_route('medicines.index')->with('ok', 'Medicamento registrado');
+if ($medicine->stock > 0) {
+    Activity::log('ingreso', "Ingreso: {$medicine->name}", "+{$medicine->stock} unidades (registro inicial)");
+}
     }
 
     // Formulario para editar
@@ -94,9 +97,14 @@ class MedicineController extends Controller
             unset($validated['image']);
         }
 
-        $medicine->update($validated);
+       $oldStock = (int) $medicine->stock;
 
-        return to_route('medicines.index')->with('ok', 'Medicamento actualizado');
+$medicine->update($validated);
+
+$added = (int) $medicine->stock - $oldStock;
+if ($added > 0) {
+    Activity::log('ingreso', "Ingreso: {$medicine->name}", "+{$added} unidades (stock: {$medicine->stock})");
+}
     }
 
     // Eliminar medicamento (solo si no se ha vendido)

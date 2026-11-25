@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable(['user_id', 'customer_id', 'date', 'total', 'igv'])]
 class Sale extends Model
 {
+    use SoftDeletes;
     // Convierte 'date' en fecha, para poder usar ->format('d/m/Y H:i')
     protected function casts(): array
     {

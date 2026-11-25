@@ -10,6 +10,16 @@
 
       <div class="d-flex align-items-center gap-2">
 
+        @php
+            $badge = $notifLowStockCount + $notifUnread;
+            $icons = [
+                'ingreso'      => ['bi-box-arrow-in-down', 'text-success'],
+                'salida'       => ['bi-cart-check', 'text-primary'],
+                'anulacion'    => ['bi-x-circle', 'text-danger'],
+                'recuperacion' => ['bi-arrow-counterclockwise', 'text-success'],
+            ];
+        @endphp
+
         <div class="dropdown">
           <button class="btn btn-sm btn-outline-secondary border-0 position-relative rounded-3"
                   type="button"
@@ -17,49 +27,68 @@
                   aria-expanded="false"
                   aria-label="Notificaciones">
             <i class="bi bi-bell fs-5"></i>
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary"
-                  style="font-size:.58rem;padding:.28em .45em">3</span>
+            @if ($badge > 0)
+              <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary"
+                    style="font-size:.58rem;padding:.28em .45em">{{ $badge > 9 ? '9+' : $badge }}</span>
+            @endif
           </button>
-          <ul class="dropdown-menu dropdown-menu-end shadow border" style="min-width:290px">
-            <li><h6 class="dropdown-header">Notificaciones</h6></li>
-            <li>
-              <a class="dropdown-item py-2" href="#">
-                <div class="d-flex align-items-start gap-2">
-                  <i class="bi bi-exclamation-triangle text-danger mt-1 flex-shrink-0"></i>
-                  <div>
-                    <div class="small fw-medium">Stock bajo: Amoxicilina 500mg</div>
-                    <div class="text-secondary" style="font-size:.72rem">Quedan 5 unidades</div>
+
+          <ul class="dropdown-menu dropdown-menu-end shadow border" style="min-width:300px;max-height:70vh;overflow-y:auto">
+
+            {{-- Stock bajo / sin stock --}}
+            @if ($notifLowStock->isNotEmpty())
+              <li><h6 class="dropdown-header">Alertas de stock ({{ $notifLowStockCount }})</h6></li>
+              @foreach ($notifLowStock as $med)
+                <li>
+                  <a class="dropdown-item py-2" href="{{ route('medicines.index', ['low_stock' => 1]) }}">
+                    <div class="d-flex align-items-start gap-2">
+                      <i class="bi bi-exclamation-triangle {{ $med->stock == 0 ? 'text-danger' : 'text-warning' }} mt-1 flex-shrink-0"></i>
+                      <div>
+                        <div class="small fw-medium">
+                          {{ $med->stock == 0 ? 'Sin stock' : 'Stock bajo' }}: {{ $med->name }}
+                        </div>
+                        <div class="text-secondary" style="font-size:.72rem">
+                          {{ $med->stock == 0 ? 'No quedan unidades' : 'Quedan ' . $med->stock . ' unidades' }}
+                        </div>
+                      </div>
+                    </div>
+                  </a>
+                </li>
+              @endforeach
+              <li><hr class="dropdown-divider"></li>
+            @endif
+
+            {{-- Ingresos y salidas --}}
+            <li><h6 class="dropdown-header">Movimientos recientes</h6></li>
+            @forelse ($notifActivities as $act)
+              @php [$icon, $color] = $icons[$act->type] ?? ['bi-bell', 'text-secondary']; @endphp
+              <li>
+                <div class="dropdown-item py-2 {{ $act->is_read ? 'text-muted' : '' }}" style="white-space:normal">
+                  <div class="d-flex align-items-start gap-2">
+                    <i class="bi {{ $icon }} {{ $color }} mt-1 flex-shrink-0"></i>
+                    <div>
+                      <div class="small fw-medium">{{ $act->message }}</div>
+                      <div class="text-secondary" style="font-size:.72rem">
+                        {{ $act->detail }} · {{ $act->created_at->locale('es')->diffForHumans() }}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item py-2" href="#">
-                <div class="d-flex align-items-start gap-2">
-                  <i class="bi bi-exclamation-triangle text-danger mt-1 flex-shrink-0"></i>
-                  <div>
-                    <div class="small fw-medium">Stock bajo: Ibuprofeno 400mg</div>
-                    <div class="text-secondary" style="font-size:.72rem">Quedan 8 unidades</div>
-                  </div>
-                </div>
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item py-2" href="#">
-                <div class="d-flex align-items-start gap-2">
-                  <i class="bi bi-check-circle text-success mt-1 flex-shrink-0"></i>
-                  <div>
-                    <div class="small fw-medium">Venta #F001-000345 completada</div>
-                    <div class="text-secondary" style="font-size:.72rem">Total: $52.30</div>
-                  </div>
-                </div>
-              </a>
-            </li>
+              </li>
+            @empty
+              <li><span class="dropdown-item-text small text-muted">Sin movimientos todavía</span></li>
+            @endforelse
+
             <li><hr class="dropdown-divider"></li>
-            <li>
-              <a class="dropdown-item text-center small text-primary fw-medium py-2" href="#">
-                Ver todas las notificaciones
-              </a>
+            <li class="px-3 pb-1">
+              @if ($notifUnread > 0)
+                <form action="{{ route('notifications.read') }}" method="POST">
+                  @csrf
+                  <button type="submit" class="btn btn-sm btn-light w-100 text-primary fw-medium">
+                    Marcar como leídas
+                  </button>
+                </form>
+              @endif
             </li>
           </ul>
         </div>

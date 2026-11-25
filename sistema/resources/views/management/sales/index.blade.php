@@ -36,12 +36,17 @@
             </thead>
             <tbody>
                 @forelse ($sales as $sale)
-                <tr>
+                <tr class="{{ $sale->trashed() ? 'table-secondary text-muted' : '' }}">
                     <td class="text-center align-middle">{{ $loop->iteration }}</td>
                     <td class="text-center align-middle">{{ $sale->date->format('d/m/Y H:i') }}</td>
                     <td class="text-start align-middle">{{ $sale->customer->name }}</td>
                     <td class="text-start align-middle">{{ $sale->user->name }}</td>
-                    <td class="text-end align-middle">S/ {{ number_format($sale->total, 2) }}</td>
+                    <td class="text-end align-middle">
+                        S/ {{ number_format($sale->total, 2) }}
+                        @if ($sale->trashed())
+                            <span class="badge bg-danger ms-1">Anulada</span>
+                        @endif
+                    </td>
                     <td class="text-center align-middle">
                         <div class="dropdown">
                             <button class="btn btn-light" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -50,12 +55,35 @@
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item" href="{{ route('sales.show', $sale) }}">Ver detalle</a></li>
                                 <li>
-                                    <form action="{{ route('sales.destroy', $sale) }}" method="POST"
-                                          onsubmit="return confirm('¿Seguro que desea anular esta venta? El stock será devuelto.')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="dropdown-item text-danger">Anular</button>
-                                    </form>
+                                                                    <li>
+                                                                    @if ($sale->trashed())
+                                    <li>
+                                        <form action="{{ route('sales.restore', $sale) }}" method="POST"
+                                              onsubmit="return confirm('¿Recuperar esta venta? El stock se descontará nuevamente.')">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="submit" class="dropdown-item text-success">Recuperar</button>
+                                        </form>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form action="{{ route('sales.force-delete', $sale) }}" method="POST"
+                                              onsubmit="return confirm('¿Eliminar DEFINITIVAMENTE esta venta? Esta acción no se puede deshacer.')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="dropdown-item text-danger">Eliminar definitivamente</button>
+                                        </form>
+                                    </li>
+                                @else
+                                    <li>
+                                        <form action="{{ route('sales.destroy', $sale) }}" method="POST"
+                                              onsubmit="return confirm('¿Seguro que desea anular esta venta? El stock será devuelto.')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="dropdown-item text-danger">Anular</button>
+                                        </form>
+                                    </li>
+                                @endif
                                 </li>
                             </ul>
                         </div>
