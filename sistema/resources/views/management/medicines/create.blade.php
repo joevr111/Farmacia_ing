@@ -1,0 +1,20 @@
+@extends('template.administrador')
+
+@section('title', 'Medicamentos')
+@section('name_section', 'Medicamentos')
+@section('description', 'Nuevo registro de medicamento')
+@section('item_section', 'Nuevo')
+@section('route_section', route('medicines.index'))
+@section('section', 'Medicamentos')
+@section('module', 'Gestión')
+
+@section('content')
+<div class="card bg-white border-0 shadow-sm border-5 border-top border-secondary">
+    <div class="card-body">
+        <form action="{{ route('medicines.store') }}" method="POST" enctype="multipart/form-data">
+            @csrf
+            @include('management.medicines._form')
+        </form>
+    </div>
+</div>
+@endsection

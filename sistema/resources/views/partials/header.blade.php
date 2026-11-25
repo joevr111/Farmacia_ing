@@ -6,7 +6,7 @@
         <i class="bi bi-list fs-5"></i>
       </button>
 
-      <h1 class="h5 fw-bold mb-0 me-auto">@yield('name-section')</h1>
+      <h1 class="h5 fw-bold mb-0 me-auto">@yield('name_section')</h1>
 
       <div class="d-flex align-items-center gap-2">
 

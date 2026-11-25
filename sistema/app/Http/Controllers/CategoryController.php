@@ -8,77 +8,64 @@ use Illuminate\Validation\Rule;
 
 class CategoryController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    // Listado de categorías (las más recientes primero)
     public function index()
     {
-        $categories = Category::all();
+        $categories = Category::latest()->get();
+
         return view('settings.categories.index', compact('categories'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+    // Formulario para crear
     public function create()
     {
         return view('settings.categories.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    // Guardar nueva categoría
     public function store(Request $request)
     {
         $validated = $request->validate([
             'name' => 'required|max:50|unique:categories',
             'description' => 'nullable|max:255',
         ]);
+
         Category::create($validated);
-        return to_route('categories.index')->with('ok', 'Categoria registrada correctamente.');
+
+        // Patrón PRG: se redirige al listado con un mensaje flash
+        return to_route('categories.index')->with('ok', 'Categoría registrada');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Category $category)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
+    // Formulario para editar
     public function edit(Category $category)
     {
         return view('settings.categories.edit', compact('category'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
+    // Actualizar categoría (el nombre sigue siendo único, ignorando la propia)
     public function update(Request $request, Category $category)
     {
         $validated = $request->validate([
-            'name' => [
-                'required',
-                'max:50',
-                Rule::unique('categories' , 'name')->ignore($category->id),
-             ],
+            'name' => ['required', 'max:50', Rule::unique('categories')->ignore($category->id)],
             'description' => 'nullable|max:255',
         ]);
 
         $category->update($validated);
 
-        return to_route('categories.index')->with('ok' , 'Categoria actualizada correctamente');
+        return to_route('categories.index')->with('ok', 'Categoría actualizada');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+    // Eliminar categoría (solo si no tiene medicamentos)
     public function destroy(Category $category)
     {
+        // La FK es restrictOnDelete(): se avisa antes de que MySQL lance el error 1451
+        if ($category->medicines()->exists()) {
+            return to_route('categories.index')
+                ->with('error', 'No se puede eliminar la categoría porque tiene medicamentos asociados');
+        }
+
         $category->delete();
-        return to_route('categories.index')->with('ok' , 'Categoria eliminada correctamente');
+
+        return to_route('categories.index')->with('ok', 'Categoría eliminada');
     }
 }

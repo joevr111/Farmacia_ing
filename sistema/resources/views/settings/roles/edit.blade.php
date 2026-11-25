@@ -1,23 +1,21 @@
 @extends('template.administrador')
 
-@section('title','ROLES')
-@section('name-section','ROLES')
-
-@section('description','Actualizar registro de categoria')
-@section('item-breadcrumb','Actualizar')
-@section('section-breadcrumb','Categorias')
-@section('module-breadcrumb','Configuraciones')
+@section('title', 'Roles')
+@section('name_section', 'Roles')
+@section('description', 'Actualizar registro de roles')
+@section('item_section', 'Editar')
+@section('route_section', route('roles.index'))
+@section('section', 'Roles')
+@section('module', 'Configuraciones')
 
 @section('content')
 <div class="card bg-white border-0 shadow-sm border-5 border-top border-secondary">
-                
-                <div class="card-body">
-                    <form action="{{ route('roles.update' , $role->id) }}" method="POST">
-                        @csrf
-                        @method('put')
-                        @include('settings.roles._form')
-                    </form>
-                </div>
-            </div>
-
+    <div class="card-body">
+        <form action="{{ route('roles.update', $role) }}" method="POST">
+            @csrf
+            @method('PUT')
+            @include('settings.roles._form')
+        </form>
+    </div>
+</div>
 @endsection
