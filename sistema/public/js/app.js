@@ -49,11 +49,7 @@ function initUserDropdown() {
   }
 }
 
-function initLogoutConfirm() {
-  document.getElementById('confirmLogoutBtn')?.addEventListener('click', () => {
-    window.location.href = '#';
-  });
-}
+
 
 function initTooltips() {
   document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => {
@@ -75,10 +71,9 @@ function initLoginForm() {
   });
 
   form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    document.getElementById('loginAlert')?.classList.add('d-none');
-
+    // Validación del navegador; si es válido, el formulario se envía a Laravel
     if (!form.checkValidity()) {
+      e.preventDefault();
       form.classList.add('was-validated');
       return;
     }
@@ -87,16 +82,12 @@ function initLoginForm() {
     submit.disabled = true;
     submit.querySelector('.spinner-border').classList.remove('d-none');
     submit.querySelector('.btn-label').textContent = 'Ingresando...';
-
-    // Prototipo: simula la autenticación y redirige al dashboard
-    setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
   });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   initSidebarToggle();
   initUserDropdown();
-  initLogoutConfirm();
   initTooltips();
   initLoginForm();
 });

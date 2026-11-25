@@ -69,6 +69,12 @@
 
     </nav>
 
+        @php
+      $authUser = auth()->user()->loadMissing('role');
+      $initials = collect(explode(' ', trim($authUser->name)))->filter()->take(2)
+          ->map(fn ($w) => mb_strtoupper(mb_substr($w, 0, 1)))->implode('');
+    @endphp
+
     <div class="dropup" style="border-top:1px solid rgba(255,255,255,.1)">
       <button class="btn w-100 d-flex align-items-center gap-2 text-start px-3 py-3 sidebar-user-btn"
               id="userMenuToggle"
@@ -78,11 +84,11 @@
               aria-haspopup="true"
               aria-label="Opciones de cuenta">
         <div class="user-avatar rounded-circle bg-primary d-flex align-items-center justify-content-center flex-shrink-0">
-          <span class="text-white fw-bold lh-1">SJ</span>
+          <span class="text-white fw-bold lh-1">{{ $initials }}</span>
         </div>
         <div class="lh-sm overflow-hidden flex-grow-1 text-start">
-          <div class="text-white fw-semibold small">Administrador</div>
-          <div class="text-white-50" style="font-size:.7rem">admin@sanjuan.com</div>
+          <div class="text-white fw-semibold small text-truncate">{{ $authUser->name }}</div>
+          <div class="text-white-50 text-truncate" style="font-size:.7rem">{{ $authUser->email }}</div>
         </div>
         <i class="bi bi-chevron-up text-white-50 small user-menu-chevron"></i>
       </button>
@@ -90,18 +96,17 @@
         <li class="px-3 py-2 border-bottom" style="background:var(--bs-tertiary-bg)">
           <div class="d-flex align-items-center gap-2">
             <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:40px;height:40px">
-              <span class="text-white fw-bold small">SJ</span>
+              <span class="text-white fw-bold small">{{ $initials }}</span>
             </div>
             <div class="lh-sm overflow-hidden">
-              <div class="fw-semibold small">Administrador</div>
-              <div class="text-secondary" style="font-size:.7rem">admin@sanjuan.com</div>
-              <span class="badge bg-primary-subtle text-primary mt-1 px-2 rounded-pill" style="font-size:.6rem;font-weight:600">Super Admin</span>
+              <div class="fw-semibold small">{{ $authUser->name }}</div>
+              <div class="text-secondary" style="font-size:.7rem">{{ $authUser->email }}</div>
+              <span class="badge bg-primary-subtle text-primary mt-1 px-2 rounded-pill" style="font-size:.6rem;font-weight:600">{{ $authUser->role->name }}</span>
             </div>
           </div>
         </li>
-        <li><a class="dropdown-item d-flex align-items-center gap-2 py-2 small" href="#" data-bs-toggle="modal" data-bs-target="#profileModal"><i class="bi bi-person-circle fs-6 text-secondary"></i>Mi Perfil</a></li>
-        <li><a class="dropdown-item d-flex align-items-center gap-2 py-2 small" href="#"><i class="bi bi-shield-lock fs-6 text-secondary"></i>Cambiar Contraseña</a></li>
-        <li><a class="dropdown-item d-flex align-items-center gap-2 py-2 small" href="#"><i class="bi bi-sliders fs-6 text-secondary"></i>Preferencias</a></li>
+        <li><a class="dropdown-item d-flex align-items-center gap-2 py-2 small" href="{{ route('profile.edit') }}"><i class="bi bi-person-circle fs-6 text-secondary"></i>Mi Perfil</a></li>
+<li><a class="dropdown-item d-flex align-items-center gap-2 py-2 small" href="{{ route('profile.password.edit') }}"><i class="bi bi-shield-lock fs-6 text-secondary"></i>Cambiar Contraseña</a></li>
         <li><hr class="dropdown-divider my-1"></li>
         <li><a class="dropdown-item d-flex align-items-center gap-2 py-2 small text-danger fw-medium" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal"><i class="bi bi-box-arrow-right fs-6"></i>Cerrar Sesión</a></li>
       </ul>
