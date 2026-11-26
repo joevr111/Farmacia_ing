@@ -2,158 +2,109 @@
 
 @section('title', 'Dashboard')
 @section('name_section', 'Dashboard')
-@section('description', 'Resumen de la farmacia')
+@section('description', 'Gráficos y KPIs')
 @section('item_section', 'Inicio')
 @section('route_section', route('dashboard.index'))
 @section('section', 'Dashboard')
 @section('module', 'Principal')
 
 @section('content')
-{{-- Tarjetas de resumen --}}
-<div class="row g-3 mb-3">
-    <div class="col-12 col-md-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body d-flex align-items-center gap-3">
-                <i class="bi bi-cash-coin fs-1 text-primary"></i>
-                <div>
-                    <small class="text-muted text-uppercase d-block">Ventas de hoy</small>
-                    <span class="fs-4 fw-bold">S/ {{ number_format($kpis['today_total'], 2) }}</span>
-                    <small class="text-muted d-block">{{ $kpis['today_count'] }} venta(s)</small>
-                </div>
-            </div>
+<style>
+    .dashboard-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-top: 4px solid #343a40;
+        border-radius: 10px;
+        padding: 20px;
+        height: 100%;
+        box-shadow: 0 3px 8px rgba(0,0,0,.05);
+    }
+
+    .stat-label {
+        font-size: 14px;
+        color: #6c757d;
+    }
+
+    .stat-value {
+        font-size: 27px;
+        font-weight: 700;
+        color: #343a40;
+        margin: 12px 0 5px;
+    }
+
+    .chart-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #343a40;
+        margin-bottom: 20px;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+</style>
+
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="dashboard-card">
+            <div class="stat-label">Vendido hoy</div>
+            <div class="stat-value">S/ {{ number_format($ventasHoy, 2) }}</div>
+            <small class="text-secondary">Ingresos del día</small>
         </div>
     </div>
-    <div class="col-12 col-md-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body d-flex align-items-center gap-3">
-                <i class="bi bi-calendar3 fs-1 text-primary"></i>
-                <div>
-                    <small class="text-muted text-uppercase d-block">Ventas del mes</small>
-                    <span class="fs-4 fw-bold">S/ {{ number_format($kpis['month_total'], 2) }}</span>
-                    <small class="text-muted d-block">{{ $kpis['month_count'] }} venta(s)</small>
-                </div>
-            </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="dashboard-card">
+            <div class="stat-label">Vendido este mes</div>
+            <div class="stat-value">S/ {{ number_format($ventasMes, 2) }}</div>
+            <small class="text-secondary">Acumulado mensual</small>
         </div>
     </div>
-    <div class="col-12 col-md-6 col-xl-3">
-        <a href="{{ route('medicines.index', ['low_stock' => 1]) }}" class="text-decoration-none text-reset">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body d-flex align-items-center gap-3">
-                    <i class="bi bi-exclamation-triangle fs-1 text-danger"></i>
-                    <div>
-                        <small class="text-muted text-uppercase d-block">Stock bajo</small>
-                        <span class="fs-4 fw-bold">{{ $kpis['low_stock'] }}</span>
-                        <small class="text-muted d-block">medicamento(s)</small>
-                    </div>
-                </div>
-            </div>
-        </a>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="dashboard-card">
+            <div class="stat-label">Clientes registrados</div>
+            <div class="stat-value">{{ $totalClientes }}</div>
+            <small class="text-secondary">Total de clientes</small>
+        </div>
     </div>
-    <div class="col-12 col-md-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body d-flex align-items-center gap-3">
-                <i class="bi bi-people fs-1 text-primary"></i>
-                <div>
-                    <small class="text-muted text-uppercase d-block">Clientes</small>
-                    <span class="fs-4 fw-bold">{{ $kpis['customers'] }}</span>
-                    <small class="text-muted d-block">registrados</small>
-                </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="dashboard-card">
+            <div class="stat-label">Stock bajo</div>
+            <div class="stat-value text-danger">{{ $stockBajo }}</div>
+            <small class="text-secondary">10 unidades o menos</small>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="dashboard-card">
+            <h5 class="chart-title">Ventas de los últimos 7 días</h5>
+            <div class="chart-container">
+                <canvas id="ventasChart"></canvas>
             </div>
         </div>
     </div>
 </div>
 
-{{-- Gráfico y más vendidos --}}
-<div class="row g-3 mb-3">
-    <div class="col-12 col-lg-8">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white fw-semibold">Ventas de los últimos 7 días</div>
-            <div class="card-body">
-                <div style="height: 280px">
-                    <canvas id="salesChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-lg-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white fw-semibold">Más vendidos</div>
-            <div class="card-body p-0">
-                <table class="table table-sm mb-0">
-                    <thead>
-                        <tr>
-                            <th class="small text-uppercase ps-3">Medicamento</th>
-                            <th class="small text-uppercase text-center">Unid.</th>
-                            <th class="small text-uppercase text-end pe-3">Monto</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($topMedicines as $item)
-                        <tr>
-                            <td class="ps-3">{{ $item->name }}</td>
-                            <td class="text-center">{{ $item->units }}</td>
-                            <td class="text-end pe-3">S/ {{ number_format($item->revenue, 2) }}</td>
-                        </tr>
-                        @empty
-                        <tr><td colspan="3" class="text-center text-muted py-3">Aún no hay ventas</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-{{-- Últimas ventas y stock bajo --}}
 <div class="row g-3">
-    <div class="col-12 col-lg-6">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white fw-semibold d-flex justify-content-between">
-                <span>Últimas ventas</span>
-                <a href="{{ route('sales.index') }}" class="small text-decoration-none">Ver todas</a>
-            </div>
-            <div class="card-body p-0">
-                <table class="table table-sm mb-0">
-                    <tbody>
-                        @forelse ($recentSales as $sale)
-                        <tr>
-                            <td class="ps-3">
-                                <a href="{{ route('sales.show', $sale) }}" class="text-decoration-none">
-                                    {{ str_pad($sale->id, 6, '0', STR_PAD_LEFT) }}
-                                </a>
-                            </td>
-                            <td>{{ $sale->customer->name }}</td>
-                            <td class="text-muted small">{{ $sale->date->format('d/m H:i') }}</td>
-                            <td class="text-end pe-3">S/ {{ number_format($sale->total, 2) }}</td>
-                        </tr>
-                        @empty
-                        <tr><td class="text-center text-muted py-3">Aún no hay ventas</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
+    <div class="col-12 col-xl-5">
+        <div class="dashboard-card">
+            <h5 class="chart-title">Ventas del mes por categoría</h5>
+            <div class="chart-container">
+                <canvas id="categoriasChart"></canvas>
             </div>
         </div>
     </div>
-    <div class="col-12 col-lg-6">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white fw-semibold d-flex justify-content-between">
-                <span>Stock bajo</span>
-                <a href="{{ route('medicines.index', ['low_stock' => 1]) }}" class="small text-decoration-none">Ver todos</a>
-            </div>
-            <div class="card-body p-0">
-                <table class="table table-sm mb-0">
-                    <tbody>
-                        @forelse ($lowStock as $medicine)
-                        <tr>
-                            <td class="ps-3">{{ $medicine->name }}</td>
-                            <td class="text-muted small">{{ $medicine->category->name }}</td>
-                            <td class="text-end pe-3"><span class="badge bg-danger">{{ $medicine->stock }}</span></td>
-                        </tr>
-                        @empty
-                        <tr><td class="text-center text-muted py-3">Todo el inventario está bien abastecido</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
+
+    <div class="col-12 col-xl-7">
+        <div class="dashboard-card">
+            <h5 class="chart-title">Top 5 medicamentos más vendidos del mes</h5>
+            <div class="chart-container">
+                <canvas id="medicamentosChart"></canvas>
             </div>
         </div>
     </div>
@@ -161,27 +112,115 @@
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
 <script>
-    const primary = getComputedStyle(document.documentElement).getPropertyValue('--bs-primary').trim() || '#ff0844';
+document.addEventListener('DOMContentLoaded', function () {
+    const rosa = '#e57389';
 
-    new Chart(document.getElementById('salesChart'), {
-        type: 'bar',
+    new Chart(document.getElementById('ventasChart'), {
+        type: 'line',
         data: {
-            labels: @json($labels),
+            labels: @json($ventasLabels),
             datasets: [{
-                label: 'Ventas (S/)',
-                data: @json($values),
-                backgroundColor: primary,
-                borderRadius: 6
+                label: 'Ventas',
+                data: @json($ventasDatos),
+                borderColor: rosa,
+                backgroundColor: 'rgba(229,115,137,0.18)',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 3,
+                pointRadius: 4,
+                pointBackgroundColor: rosa
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, ticks: { callback: v => 'S/ ' + v } } }
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: context => 'S/ ' + Number(context.raw).toFixed(2)
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { callback: value => 'S/ ' + value }
+                },
+                x: { grid: { display: false } }
+            }
         }
     });
+
+    new Chart(document.getElementById('categoriasChart'), {
+        type: 'doughnut',
+        data: {
+            labels: @json($categoriasLabels),
+            datasets: [{
+                data: @json($categoriasDatos),
+                backgroundColor: [
+                    '#e57389',
+                    '#6c757d',
+                    '#adb5bd',
+                    '#f0a5b4',
+                    '#c94b64',
+                    '#929aa4',
+                    '#f5c5ce'
+                ],
+                borderColor: '#ffffff',
+                borderWidth: 3,
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '55%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { usePointStyle: true, padding: 15 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: context => context.label + ': S/ ' + Number(context.raw).toFixed(2)
+                    }
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById('medicamentosChart'), {
+        type: 'bar',
+        data: {
+            labels: @json($medicamentosLabels),
+            datasets: [{
+                label: 'Unidades vendidas',
+                data: @json($medicamentosDatos),
+                backgroundColor: [
+                    '#e57389',
+                    '#6c757d',
+                    '#adb5bd',
+                    '#d95c75',
+                    '#929aa4'
+                ],
+                borderRadius: 5,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { beginAtZero: true, ticks: { precision: 0 } },
+                y: { grid: { display: false } }
+            }
+        }
+    });
+});
 </script>
 @endpush

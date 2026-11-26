@@ -6,10 +6,16 @@
         <select name="items[{{ $index }}][medicine_id]" class="form-select form-select-sm">
             <option value="" data-price="0">-- Seleccione --</option>
             @foreach ($medicines as $medicine)
-                <option value="{{ $medicine->id }}" data-price="{{ $medicine->price }}"
+                @php
+                    $availableStock = $stockAvailable[$medicine->id] ?? $medicine->stock;
+                    $price = $historicalPrices[$medicine->id] ?? $medicine->price;
+                @endphp
+                @if ($availableStock > 0)
+                <option value="{{ $medicine->id }}" data-price="{{ number_format((float) $price, 2, '.', '') }}"
                         @selected(($item['medicine_id'] ?? '') == $medicine->id)>
-                    {{ $medicine->name }} (stock: {{ $medicine->stock }})
+                    {{ $medicine->name }} (stock: {{ $availableStock }})
                 </option>
+                @endif
             @endforeach
         </select>
     </td>

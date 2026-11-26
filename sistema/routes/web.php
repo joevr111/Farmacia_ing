@@ -10,14 +10,14 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\UserController;
-use Illuminate\Support\Facades\Route;
 use App\Models\Activity;
+use Illuminate\Support\Facades\Route;
 
 // Solo visitantes (si ya inició sesión, lo manda al dashboard)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.store');
-    
+
 });
 
 // Todo el sistema requiere sesión iniciada
@@ -25,9 +25,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     Route::post('/notifications/read', function () {
-    Activity::where('is_read', false)->update(['is_read' => true]);
-    return back();
-})->name('notifications.read');
+        Activity::where('is_read', false)->update(['is_read' => true]);
+
+        return back();
+    })->name('notifications.read');
 
     // Mi Perfil y Cambiar Contraseña
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -39,10 +40,12 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/export', [ReportController::class, 'export'])->name('reports.export');
+    Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
+    Route::get('/reports/export/excel', [ReportController::class, 'exportExcel'])->name('reports.export.excel');
     Route::resource('categories', CategoryController::class)->except('show');
     Route::resource('medicines', MedicineController::class)->except('show');
     Route::resource('customers', CustomerController::class)->except('show');
-    Route::resource('sales', SaleController::class)->except(['edit', 'update'])->withTrashed(['show']);
+    Route::resource('sales', SaleController::class)->withTrashed(['show']);
     Route::patch('/sales/{sale}/restore', [SaleController::class, 'restore'])->withTrashed()->name('sales.restore');
     Route::delete('/sales/{sale}/force', [SaleController::class, 'forceDelete'])->withTrashed()->name('sales.force-delete');
     Route::resource('roles', RoleController::class)->except('show');

@@ -1,6 +1,7 @@
 *.log
 .DS_Store
 .env
+.env.demo
 .env.backup
 .env.production
 .phpactor.json
@@ -18,6 +19,7 @@
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage
+/database/farmacia_demo.sqlite
 /storage/*.key
 /storage/pail
 /vendor

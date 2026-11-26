@@ -54,9 +54,7 @@
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item" href="{{ route('sales.show', $sale) }}">Ver detalle</a></li>
-                                <li>
-                                                                    <li>
-                                                                    @if ($sale->trashed())
+                                @if ($sale->trashed())
                                     <li>
                                         <form action="{{ route('sales.restore', $sale) }}" method="POST"
                                               onsubmit="return confirm('¿Recuperar esta venta? El stock se descontará nuevamente.')">
@@ -75,6 +73,7 @@
                                         </form>
                                     </li>
                                 @else
+                                    <li><a class="dropdown-item" href="{{ route('sales.edit', $sale) }}">Editar</a></li>
                                     <li>
                                         <form action="{{ route('sales.destroy', $sale) }}" method="POST"
                                               onsubmit="return confirm('¿Seguro que desea anular esta venta? El stock será devuelto.')">
@@ -84,7 +83,6 @@
                                         </form>
                                     </li>
                                 @endif
-                                </li>
                             </ul>
                         </div>
                     </td>
